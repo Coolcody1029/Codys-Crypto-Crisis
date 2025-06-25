@@ -80,7 +80,7 @@ function App() {
       {/* Background Music Audio */}
       <audio
         ref={audioRef}
-        src="/Lacrimosa.mp3"
+        src={process.env.PUBLIC_URL + '/Lacrimosa.mp3'}
         loop
         autoPlay
       />
@@ -208,7 +208,7 @@ function App() {
                 style={{ border: "2px solid #6A0DAD" }}
               />
               <img
-                src="/phantom_2.png"
+                src={process.env.PUBLIC_URL + '/phantom_2.png'}
                 alt="Right side"
                 width="200"
                 height="360"
