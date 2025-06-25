@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.js": "/codys-crypto-crisis/static/js/main.ad62bd31.js",
-    "index.html": "/codys-crypto-crisis/index.html",
-    "main.ad62bd31.js.map": "/codys-crypto-crisis/static/js/main.ad62bd31.js.map"
+    "main.js": "/Codys-Crypto-Crisis/static/js/main.ad62bd31.js",
+    "index.html": "/Codys-Crypto-Crisis/index.html",
+    "main.ad62bd31.js.map": "/Codys-Crypto-Crisis/static/js/main.ad62bd31.js.map"
   },
   "entrypoints": [
     "static/js/main.ad62bd31.js"
