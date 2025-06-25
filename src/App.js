@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { charts as allCharts } from './charts';
 
@@ -13,10 +13,27 @@ function App() {
   const [result, setResult] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const audioRef = useRef(null);
 
   const filteredCharts = allCharts.filter(chart => chart.difficulty === difficulty);
   const chart = filteredCharts[current % filteredCharts.length];
   const MAX_LEVERAGE = 100;
+
+  // Play/pause audio on mute toggle
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted) {
+        audioRef.current.play().catch(() => {});
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMuted]);
 
   const handleChoice = (choice) => {
     const correct = chart.correct;
@@ -29,14 +46,16 @@ function App() {
     if (choice === correct) {
       newPortfolio += value;
       feedback = `✅ Correct! +$${value}`;
+      setShowFeedback(false);
     } else if (choice === "no-trade") {
       feedback = "⏭️ Skipped.";
-    } else if (correct === "no-trade" && choice !== "no-trade") {
-      newPortfolio -= value;
-      feedback = `❌ No Trade Zone! -$${value}`;
+      setShowFeedback(false);
     } else {
       newPortfolio -= value;
-      feedback = `❌ Incorrect! -$${value}`;
+      feedback = correct === "no-trade"
+        ? `❌ No Trade Zone! -$${value}`
+        : `❌ Incorrect! -$${value}`;
+      setShowFeedback(true);
     }
 
     setPortfolio(newPortfolio);
@@ -53,10 +72,41 @@ function App() {
     setLeverage(1);
     setResult("");
     setShowHint(false);
+    setShowFeedback(false);
   };
 
   return (
-    <div style={{ backgroundColor: "#0D0D0D", color: "#E6E6FA", minHeight: "100vh", padding: 20, fontFamily: "sans-serif" }}>
+    <div style={{ backgroundColor: "#0D0D0D", color: "#E6E6FA", minHeight: "100vh", padding: 20, fontFamily: "sans-serif", position: "relative" }}>
+      {/* Background Music Audio */}
+      <audio
+        ref={audioRef}
+        src="/Lacrimosa.mp3"
+        loop
+        autoPlay
+      />
+
+      {/* Mute / Unmute Button top right */}
+      <button
+        onClick={() => setIsMuted(prev => !prev)}
+        style={{
+          position: "fixed",
+          top: 20,
+          right: 20,
+          backgroundColor: "#222",
+          color: "#E6E6FA",
+          border: "1px solid #6A0DAD",
+          padding: "8px 12px",
+          cursor: "pointer",
+          zIndex: 1000,
+          borderRadius: 4,
+          userSelect: "none",
+        }}
+        aria-label={isMuted ? "Unmute Music" : "Mute Music"}
+        title={isMuted ? "Unmute Music" : "Mute Music"}
+      >
+        {isMuted ? "🔈" : "🔊"}
+      </button>
+
       <AnimatePresence mode="wait">
         {!username ? (
           <motion.div
@@ -98,6 +148,12 @@ function App() {
             >
               📘 How to Play
             </button>
+            <button
+              onClick={() => setShowGlossary(prev => !prev)}
+              style={{ marginTop: 10 }}
+            >
+              📚 Pattern Glossary
+            </button>
             <AnimatePresence>
               {showHowToPlay && (
                 <motion.div
@@ -110,6 +166,25 @@ function App() {
                     To play, choose your difficulty. Your task is based on the 4-hour candles provided.
                     Look at the chart and predict whether it's appropriate to Long, Short, or No Trade based on the TA pattern shown.
                   </p>
+                </motion.div>
+              )}
+              {showGlossary && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  style={{ marginTop: 20, maxWidth: 600, textAlign: "left" }}
+                >
+                  {['Beginner', 'Intermediate', 'Expert'].map(level => (
+                    <div key={level} style={{ marginBottom: 10 }}>
+                      <h4>{level}</h4>
+                      <ul>
+                        {allCharts.filter(c => c.difficulty === level).map((c, i) => (
+                          <li key={i}><strong>{c.pattern}</strong> - Correct Move: {c.correct}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -176,6 +251,12 @@ function App() {
                 </div>
               )}
             </div>
+
+            {showFeedback && (
+              <div style={{ backgroundColor: "#330000", padding: 10, border: "1px solid #FF5555", marginBottom: 10 }}>
+                <strong>Why?</strong> This pattern is a <em>{chart.pattern}</em>, which typically indicates a {chart.correct === "Long" ? "bullish" : chart.correct === "Short" ? "bearish" : "neutral"} setup. Study the formation and volume before acting.
+              </div>
+            )}
 
             <h3>{result}</h3>
 
